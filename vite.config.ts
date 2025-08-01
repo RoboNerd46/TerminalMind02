@@ -13,7 +13,7 @@ export default defineConfig({
   build: {
     outDir: 'dist', // Ensure build outputs to dist/
     rollupOptions: {
-      input: '/src/index.tsx' // Updated to assumed entry point
+      input: '/src/index.tsx' // Explicitly set entry point to index.tsx
     }
   },
   server: {
