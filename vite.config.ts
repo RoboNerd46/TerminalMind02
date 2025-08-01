@@ -10,9 +10,15 @@ export default defineConfig({
     },
     extensions: ['.js', '.jsx', '.ts', '.tsx']
   },
+  build: {
+    outDir: 'dist', // Ensure build outputs to dist/
+    rollupOptions: {
+      input: '/src/main.tsx' // Specify entry point explicitly
+    }
+  },
   server: {
     host: '0.0.0.0', // Bind to all interfaces for Render
-    port: parseInt(process.env.PORT || '10000') // Use Render's default port or env variable
+    port: parseInt(process.env.PORT || '10000') // Use Render's port
   },
   preview: {
     host: '0.0.0.0', // Bind preview server to all interfaces
