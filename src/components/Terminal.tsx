@@ -1,65 +1,44 @@
-import { useState, useEffect, useCallback } from 'react';
-import Terminal from './components/Terminal';
-import { getNextQA } from './services/llm7Service';
-import type { QAEntry, Stage } from './types';
-import { INITIAL_STATEMENT } from './constants';
+import type { QAEntry, Stage } from '../types';
 
-const App = () => {
-  console.log('App rendering', { stage: 'initial' });
-  const [history, setHistory] = useState<QAEntry[]>([]);
-  const [currentQA, setCurrentQA] = useState<QAEntry | null>(null);
-  const [stage, setStage] = useState<Stage>('idle');
-  const [error, setError] = useState<string | null>(null);
+interface TerminalProps {
+  history: QAEntry[];
+  currentQA: QAEntry | null;
+  stage: Stage;
+  error: string | null;
+  onTypingComplete: (type: 'question' | 'answer') => void;
+}
 
-  const fetchNextQA = useCallback(async (lastAnswer: string) => {
-    console.log('fetchNextQA called with', { lastAnswer });
-    setStage('thinking');
-    setError(null);
-    try {
-      const nextQA = await getNextQA(lastAnswer);
-      console.log('API response', { nextQA });
-      setCurrentQA(nextQA);
-      setStage('typing_question');
-    } catch (err) {
-      console.log('API error', { err });
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      setError(`// SYSTEM ERROR: ${errorMessage}. Retrying in 10 seconds...`);
-      setStage('error');
-      setTimeout(() => setStage('idle'), 10000);
-    }
-  }, []);
-
-  useEffect(() => {
-    console.log('useEffect triggered', { stage, historyLength: history.length });
-    if (stage === 'idle') {
-      const lastAnswer = history.length > 0 ? history[history.length - 1].answer : INITIAL_STATEMENT;
-      setTimeout(() => fetchNextQA(lastAnswer), 5000);
-    }
-  }, [stage, history, fetchNextQA]);
-
-  const handleTypingComplete = (type: 'question' | 'answer') => {
-    console.log('handleTypingComplete', { type, stage });
-    if (type === 'question') {
-      setStage('typing_answer');
-    } else {
-      setHistory((prev) => [...prev, currentQA!]);
-      setStage('idle');
-    }
-  };
+const Terminal = ({ history, currentQA, stage, error, onTypingComplete }: TerminalProps) => {
+  console.log('Terminal rendering', { stage, currentQA, error });
 
   return (
-    <div className="w-full h-screen bg-black flex items-center justify-center">
-      <div className="w-full max-w-4xl aspect-video">
-        <Terminal
-          history={history}
-          currentQA={currentQA}
-          stage={stage}
-          error={error}
-          onTypingComplete={handleTypingComplete}
-        />
-      </div>
+    <div className="w-full h-full bg-gray-900 text-green-400 font-mono text-sm p-4 overflow-auto">
+      {history.map((entry, index) => (
+        <div key={index}>
+          <div>{`> ${entry.question}`}</div>
+          <div>{entry.answer}</div>
+        </div>
+      ))}
+      {error && <div className="text-red-500">{error}</div>}
+      {currentQA && stage !== 'idle' && (
+        <>
+          {stage === 'typing_question' && (
+            <div>
+              {`> ${currentQA.question.slice(0, 1)}`}
+              <span className="animate-pulse">█</span>
+            </div>
+          )}
+          {stage === 'typing_answer' && (
+            <div>
+              {currentQA.answer.slice(0, 1)}
+              <span className="animate-pulse">█</span>
+            </div>
+          )}
+        </>
+      )}
+      {!currentQA && stage === 'thinking' && <div>Thinking...</div>}
     </div>
   );
 };
 
-export default App;
+export default Terminal;
