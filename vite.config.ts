@@ -13,5 +13,10 @@ export default defineConfig({
   server: {
     host: '0.0.0.0', // Bind to all interfaces for Render
     port: parseInt(process.env.PORT || '10000') // Use Render's default port or env variable
+  },
+  preview: {
+    host: '0.0.0.0', // Bind preview server to all interfaces
+    port: parseInt(process.env.PORT || '10000'), // Match Render's port
+    allowedHosts: ['terminalmind02.onrender.com'] // Allow Render's domain
   }
 });
